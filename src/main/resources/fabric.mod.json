@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "tellurium-chat-bridge",
+  "version": "${version}",
+  "name": "Tellurium Chat Bridge",
+  "description": "Discord <-> ingame chat bridge for the Tellurium network.",
+  "authors": [
+    "GoodPro712"
+  ],
+  "contact": {
+    "website": "telluriummc.github.io",
+    "repo": "https://github.com/TelluriumMC/TelluriumChatBridge"
+  },
+  "license": "MIT",
+  "icon": "assets/tellurium-chat-bridge/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "net.telluriummc.telluriumchatbridge.client.TelluriumChatBridgeClient"
+    ],
+    "main": [
+      "net.telluriummc.telluriumchatbridge.TelluriumChatBridge"
+    ]
+  },
+  "mixins": [
+    "tellurium-chat-bridge.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.11.6",
+    "fabric": "*",
+    "minecraft": "1.17.1"
+  }
+}
