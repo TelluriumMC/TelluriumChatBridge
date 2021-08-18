@@ -12,6 +12,10 @@ repositories {
     // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
     // See https://docs.gradle.org/current/userguide/declaring_repositories.html
     // for more information about repositories.
+    maven {
+        name 'm2-dv8tion'
+        url 'https://m2.dv8tion.net/releases'
+    }
 }
 
 dependencies {
@@ -25,6 +29,13 @@ dependencies {
 
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
+
+    // Java Discord API
+    implementation "net.dv8tion:JDA:${project.jda_version}"
+
+    // Logging (used by JDA)
+    implementation "org.apache.logging.log4j:log4j-api:${project.log4j_version}"
+    implementation "org.apache.logging.log4j:log4j-core:${project.log4j_version}"
 }
 
 processResources {
