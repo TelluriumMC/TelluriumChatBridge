@@ -16,6 +16,8 @@ repositories {
         name 'm2-dv8tion'
         url 'https://m2.dv8tion.net/releases'
     }
+
+    mavenCentral()
 }
 
 dependencies {
@@ -32,10 +34,10 @@ dependencies {
 
     // Java Discord API
     implementation "net.dv8tion:JDA:${project.jda_version}"
+    implementation "club.minnced:discord-webhooks:${project.discord_webhooks_version}"
 
-    // Logging (used by JDA)
-    implementation "org.apache.logging.log4j:log4j-api:${project.log4j_version}"
-    implementation "org.apache.logging.log4j:log4j-core:${project.log4j_version}"
+    // jsoup HTML parser library @ https://jsoup.org/
+    implementation "org.jsoup:jsoup:${project.jsoup_version}"
 }
 
 processResources {
