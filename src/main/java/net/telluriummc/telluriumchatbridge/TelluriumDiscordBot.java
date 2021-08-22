@@ -14,7 +14,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
-import net.minecraft.util.Formatting;
+import net.telluriummc.telluriumchatbridge.data.DiscordBridgeMessage;
 import net.telluriummc.telluriumchatbridge.utils.JsonReader;
 import org.apache.commons.codec.binary.Base64;
 import org.jetbrains.annotations.NotNull;
@@ -23,9 +23,7 @@ import org.mineskin.MineskinClient;
 import org.mineskin.SkinOptions;
 
 import javax.security.auth.login.LoginException;
-import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -35,6 +33,7 @@ public class TelluriumDiscordBot
     private JDA bot;
     private List<TextChannel> bridgeChannels;
     private final MinecraftServer mcServer;
+    private final DiscordBridgeMessage previousSender;
 
     public TelluriumDiscordBot(String token, MinecraftServer server, String[] channelIds) {
         try {
@@ -51,6 +50,7 @@ public class TelluriumDiscordBot
         });
         
         mcServer = server;
+        previousSender = new DiscordBridgeMessage();
         
         new Thread(() -> {
             try {
@@ -74,28 +74,28 @@ public class TelluriumDiscordBot
                 System.out.println("[Tellurium Chat Bridge] Initialized Discord channel with the name of " + channel.getName()  + " and the id of " + channelId);
             }
         }).start();
+
+        handleMinecraftMessage("Server started!", "");
     }
 
-    public void handleDiscordMessage(MessageReceivedEvent event) {
-        // todo: config
-        String filler = " " + Formatting.RESET + Formatting.DARK_GRAY + "»" + Formatting.RESET + " ";
-        String nameSuffix = " " + Formatting.BLUE + Formatting.BOLD + "D";
-        String botPrefix = "!";
-
+    public void handleDiscordMessage(@NotNull MessageReceivedEvent event) {
         // temp cache variables for less method calls
         Message message = event.getMessage();
         MessageChannel channel = event.getChannel();
         User author = event.getAuthor();
         String messageContent = message.getContentRaw();
         String eventChannelId = channel.getId();
+        String authorName = author.getName();
+        String authorId = author.getId();
 
-        if (messageContent.startsWith(botPrefix)) {
-            switch (messageContent.substring(botPrefix.length())) {
+        // commands
+        if (messageContent.startsWith(TelluriumChatBridge.botPrefix)) {
+            switch (messageContent.substring(TelluriumChatBridge.botPrefix.length())) {
                 case "ping" -> channel.sendMessage("Pong! Latency: `" + bot.getGatewayPing() + "ms`").queue();
                 case "online", "players", "playing" -> {
                     StringBuilder playerList = new StringBuilder();
                     for (String player : mcServer.getPlayerNames()) {
-                        playerList.append(player).append(", ");
+                        playerList.append(player.replace("_", "\\_")).append(", ");
                     }
 
                     // remove the ", " from the final string
@@ -120,43 +120,46 @@ public class TelluriumDiscordBot
         }
 
         // make sure we don't send anything if the content is sent by our bot and starts with ```[
-        boolean channelToChannelContent = author.getId().equals(bot.getSelfUser().getId()) && messageContent.startsWith("**[");
-        if (message.isWebhookMessage() || channelToChannelContent) {
+        if ((authorId.equals(bot.getSelfUser().getId()) && messageContent.startsWith("**[")) || message.isWebhookMessage()) {
             return;
-        }
-
-        // loop through every text channel
-        for (TextChannel bridgeChannel : bridgeChannels) {
-            // check if the channel the message was sent doesn't match our text channel, and make sure it isn't a webhook
-            if (!eventChannelId.equals(bridgeChannel.getId())) {
-                continue;
-            }
-
-            // send messages to every other channel
-            handleDiscordToDiscord(eventChannelId, event);
         }
 
         // Sends a message that looks something like GoodPro712 D » This is a message from Discord!
         if (mcServer.getCurrentPlayerCount() > 0) {
             CommandManager commandManager = mcServer.getCommandManager();
-            String attachment = !message.getAttachments().isEmpty() ? "<Attachment> " : "";
-            commandManager.execute(mcServer.getCommandSource(), formatAsTellraw(author.getName() + nameSuffix + filler + attachment + messageContent));
+            String attachment = !message.getAttachments().isEmpty() ? "<Attachment>" : "";
+
+            String text = TelluriumChatBridge.discordToMinecraftFormatting
+                    .replace("{player_name}", authorName)
+                    .replace("attachment", attachment)
+                    .replace("{text}", messageContent);
+
+            commandManager.execute(mcServer.getCommandSource(), formatAsTellraw(text));
+        }
+
+        if (!message.getAuthor().isBot()) {
+            // send messages to every other channel
+            handleDiscordToDiscord(message, eventChannelId, authorName, authorId, event.getGuild().getName());
         }
     }
 
-    private void handleDiscordToDiscord(String eventChannelId, MessageReceivedEvent event) {
+    private void handleDiscordToDiscord(Message message, String eventChannelId, String authorName, String authorId, String guildName) {
+        List<Message.Attachment> attachments = message.getAttachments();
+
         for (TextChannel bridgeChannel : bridgeChannels) {
             if (bridgeChannel.getId().equals(eventChannelId)) {
                 continue;
             }
 
-            String authorName = event.getAuthor().getName();
-            String messageGuild = event.getGuild().getName();
-            String header = "**[" + authorName + " from " + messageGuild + "]**\n";
-            Message message = event.getMessage();
-            List<Message.Attachment> attachments = message.getAttachments();
+            StringBuilder text = new StringBuilder();
 
-            MessageAction newMessage = bridgeChannel.sendMessage(header + message.getContentRaw());
+            if (!(previousSender.getUserId().equals(authorId) && previousSender.getChannelId().equals(eventChannelId))) {
+                text.append("**[").append(authorName).append(" from ").append(guildName).append("]**\n");
+            }
+
+            text.append(message.getContentRaw());
+
+            MessageAction newMessage = bridgeChannel.sendMessage(text.toString());
 
             if (!attachments.isEmpty()) {
                 for (Message.Attachment attachment : attachments) {
@@ -170,58 +173,61 @@ public class TelluriumDiscordBot
 
             newMessage.queue();
         }
+
+        previousSender.set(authorId, eventChannelId);
     }
 
-    public void handleMinecraftMessage(String rawMessage, String uuid) {
-        // create webhook builder | todo: webhook url from config
-        WebhookClient client = WebhookClient.withUrl("https://discord.com/api/webhooks/877690625481392179/FQO9otfxTI6Ml7mMY6dt-5IpacF4KhYnvz-EgmcwfFm7G1_PNg8cvwAFOjD4QaVC_cdY");
-        WebhookMessageBuilder builder = new WebhookMessageBuilder();
+    public void handleMinecraftMessage(String rawMessage, @NotNull String uuid) {
+        for (String webhookUrl : TelluriumChatBridge.webhookUrls) {
+            // create webhook builder
+            WebhookClient client = WebhookClient.withUrl(webhookUrl);
 
-        // add the minecraft message to the webhook builder
-        builder.append(rawMessage);
-
-        if (uuid.equals("00000000000000000000000000000000")) {
-            builder.setUsername("[SERVER]");
-
-            try {
-                builder.setAvatarUrl(new File(String.valueOf(mcServer.getIconFile())).toURI().toURL().toString());
-            } catch (MalformedURLException error) {
-                error.printStackTrace();
+            // we don't want blank messages nor private commands
+            if (rawMessage.isBlank() || rawMessage.startsWith("/")) {
+                return;
             }
 
-            client.send(builder.build());
-            return;
-        }
+            WebhookMessageBuilder builder = new WebhookMessageBuilder();
+            builder.append(rawMessage);
 
-        // set the webhook username to minecraft IGN
-        try {
-            // set the username with our helper method
-            builder.setUsername(usernameFromUUID(uuid));
-        } catch (IOException error) {
-            // notify something broke through username, message content and logs respectively
-            builder.setUsername("USERNAME_FAILED");
-            builder.append("\nERROR: Failed to set webhook username. Please check logs for details.");
-            System.out.println("[Tellurium Chat Bridge] Failed to set webhook username with uuid: " + uuid); // todo: remove hardcoded prefix
-        }
-
-        try {
-            String username = usernameFromUUID(uuid);
-            String skinUrl = skinUrlFromUUID(uuid);
-
-            // create a mineskin api post request to generate our head
-            MineskinClient mineskinClient = new MineskinClient("TelluriumChatBridge/1.0.0");
-            mineskinClient.generateUrl(skinUrl, new SkinOptions(username)).thenAccept(skin -> {
-                // grab 3d render of head from mineskin id
-                String headUrl = "https://api.mineskin.org/render/" + skin.uuid + "/head";
-                // set webhook avatar to this 3d head image
-                builder.setAvatarUrl(headUrl);
-                // send the webhook message
+            // server host
+            if (uuid.equals("00000000000000000000000000000000") || uuid.isEmpty()) {
+                builder.setUsername("Server Host");
+                builder.setAvatarUrl("https://eu.mc-api.net/v3/server/favicon/" + mcServer.getServerIp());
                 client.send(builder.build());
-            });
-        } catch (IOException error) {
-            // notify something broke through message content and logs
-            builder.append("\nERROR: Failed to set webhook avatar. Please check logs for details.");
-            System.out.println("[Tellurium Chat Bridge] Failed to set webhook avatar with uuid: " + uuid); // todo: remove hardcoded prefix
+                return;
+            }
+
+            // set the webhook username to minecraft IGN
+            try {
+                // set the username with our helper method
+                builder.setUsername(usernameFromUUID(uuid));
+            } catch (IOException error) {
+                // notify something broke through username, message content and logs respectively
+                builder.setUsername("USERNAME_FAILED");
+                builder.append("\nERROR: Failed to set webhook username. Please check logs for details.");
+                System.out.println(TelluriumChatBridge.ConsolePrefix + "Failed to set webhook username with uuid: " + uuid);
+            }
+
+            try {
+                String username = usernameFromUUID(uuid);
+                String skinUrl = skinUrlFromUUID(uuid);
+
+                // create a mineskin api post request to generate our head
+                MineskinClient mineskinClient = new MineskinClient("TelluriumChatBridge/1.0.0");
+                mineskinClient.generateUrl(skinUrl, new SkinOptions(username)).thenAccept(skin -> {
+                    // grab 3d render of head from mineskin id
+                    String headUrl = "https://api.mineskin.org/render/" + skin.uuid + "/head";
+                    // set webhook avatar to this 3d head image
+                    builder.setAvatarUrl(headUrl);
+                    // send the webhook message
+                    client.send(builder.build());
+                });
+            } catch (IOException error) {
+                // notify something broke through message content and logs
+                builder.append("\nERROR: Failed to set webhook avatar. Please check logs for details.");
+                System.out.println(TelluriumChatBridge.ConsolePrefix + "Failed to set webhook avatar with uuid: " + uuid);
+            }
         }
     }
 

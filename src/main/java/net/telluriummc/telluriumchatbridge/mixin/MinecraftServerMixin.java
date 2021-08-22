@@ -16,6 +16,11 @@ public class MinecraftServerMixin {
     public void sendMessage(Text text, UUID uuid, CallbackInfo ci) {
         String parsedUuid = uuid.toString().replaceAll("-", "");
         String rawMessage = text.asString();
+
+        if (rawMessage.equals("")) {
+            return;
+        }
+
         TelluriumChatBridge.discordBot.handleMinecraftMessage(rawMessage, parsedUuid);
     }
 }
