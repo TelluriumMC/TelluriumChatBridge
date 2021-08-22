@@ -28,8 +28,8 @@
 ## Features
 ### Multiple Discord Channel Support
 Broadcast messages from multiple Discord channels into Minecraft, from multiple different servers! 
-This also features Discord to Discord chat bridging, so you wont miss a message.
-This also supports attachments! Upload images and files and they will be sent through, too, and if a message had an attachment, this will show in Minecraft chat too!
+This also features Discord to Discord chat bridging, so you won't miss a message.
+This also supports attachments! Upload images and files, and they will be sent through too, and if a message contains an attachment, this will show in Minecraft chat too!
 
 ![image](https://user-images.githubusercontent.com/45357714/130361637-5b31f570-a011-4959-898c-300b544bc869.png)
 
@@ -70,7 +70,7 @@ Commands to check the server's health (TPS, and MSPT), the current players onlin
 ![image](https://user-images.githubusercontent.com/45357714/130361567-77bce539-dbf2-4234-954d-2ec3935130fa.png)
 
 ### Json Configuration
-Automatically generating config file, with the ability to customize everything!
+An automatically generating config file, with the ability to customize everything!
 See [configuration](#configuration) below.
 
 ### Console Logging
