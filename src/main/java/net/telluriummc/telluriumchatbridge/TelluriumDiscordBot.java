@@ -131,7 +131,7 @@ public class TelluriumDiscordBot
 
             String text = TelluriumChatBridge.discordToMinecraftFormatting
                     .replace("{player_name}", authorName)
-                    .replace("attachment", attachment)
+                    .replace("{attachment}", attachment)
                     .replace("{text}", messageContent);
 
             commandManager.execute(mcServer.getCommandSource(), formatAsTellraw(text));
