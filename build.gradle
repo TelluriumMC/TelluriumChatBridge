@@ -41,7 +41,7 @@ dependencies {
     
     // dependencies of dependencies
     implementation(include("com.squareup.okhttp3:okhttp:4.9.1"))
-    // compile 'com.neovisionaries:nv-websocket-client:2.14'
+    compile 'com.neovisionaries:nv-websocket-client:2.14'
     
 }
 
