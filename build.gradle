@@ -40,8 +40,8 @@ dependencies {
     implementation(include("org.jsoup:jsoup:${project.jsoup_version}"))
     
     // dependencies of dependencies
-    implementation(include("com.squareup.okhttp3:okhttp:4.9.1"))
-    implementation(include("com.neovisionaries:nv-websocket-client:2.14"))
+    // implementation(include("com.squareup.okhttp3:okhttp:4.9.1"))
+    // implementation(include("com.neovisionaries:nv-websocket-client:2.14"))
     
 }
 
