@@ -38,6 +38,11 @@ dependencies {
 
     // jsoup HTML parser library @ https://jsoup.org/
     implementation(include("org.jsoup:jsoup:${project.jsoup_version}"))
+    
+    // dependencies of dependencies
+    implementation(include("com.squareup.okhttp3:okhttp:4.9.1"))
+    // compile 'com.neovisionaries:nv-websocket-client:2.14'
+    
 }
 
 processResources {
