@@ -42,6 +42,8 @@ dependencies {
     include "com.fasterxml.jackson.core:jackson-databind:2.10.1"
     include "org.json:json:20210307"
     
+    // jsoup HTML parser library @ https://jsoup.org/
+    implementation include("org.jsoup:jsoup:${project.jsoup_version}")
 }
 
 processResources {
