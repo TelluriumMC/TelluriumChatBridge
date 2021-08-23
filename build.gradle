@@ -33,11 +33,11 @@ dependencies {
     // You may need to force-disable transitiveness on them.
 
     // Java Discord API
-    include "net.dv8tion:JDA:${project.jda_version}"
-    include "club.minnced:discord-webhooks:${project.discord_webhooks_version}"
+    implementation(include("net.dv8tion:JDA:${project.jda_version}"))
+    implementation(include("club.minnced:discord-webhooks:${project.discord_webhooks_version}"))
 
     // jsoup HTML parser library @ https://jsoup.org/
-    include "org.jsoup:jsoup:${project.jsoup_version}"
+    implementation(include("org.jsoup:jsoup:${project.jsoup_version}"))
 }
 
 processResources {
