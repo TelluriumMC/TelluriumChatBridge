@@ -24,7 +24,7 @@ dependencies {
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    implementation include ('net.dv8tion:JDA:4.3.0_310')
+    implementation include ('net.dv8tion:JDA:4.4.0_351')
 
     implementation include("club.minnced:discord-webhooks:0.5.7")
     
