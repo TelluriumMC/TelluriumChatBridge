@@ -26,7 +26,7 @@ dependencies {
 
     implementation include ('net.dv8tion:JDA:4.3.0_310')
 
-    implementation include("club.minnced:discord-webhooks:0.5.7")
+    implementation include("club.minnced:discord-webhooks:0.7.4")
     
     // jsoup HTML parser library @ https://jsoup.org/
     implementation include("org.jsoup:jsoup:${project.jsoup_version}")
