@@ -12,18 +12,6 @@
 
 **Built with [JDA](https://github.com/DV8FromTheWorld/JDA), [Mineskin](https://github.com/InventivetalentDev/MineskinClient), and [Oro-Config](https://github.com/OroArmor/Oro-Config).**
 
-
-**!!!! WARNING !!!!!**  
-**!!!! WARNING !!!!!**  
-**!!!! WARNING !!!!!**  
-
-DO NOT RUN! THIS PROGRAM IS STILL VULNERABLE TO LOG4SHELL!  
-
-**!!!! WARNING !!!!!**  
-**!!!! WARNING !!!!!**  
-**!!!! WARNING !!!!!**  
-
-
 \- This is my first time using Java, so this code might not have the best practices in it.
 
 ## Contents
